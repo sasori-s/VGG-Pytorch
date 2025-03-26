@@ -1,0 +1,6 @@
+.idea/
+.lightning_studio/
+.vscode-server/
+.vscode/
+.wget-hsts
+__pycache__/
