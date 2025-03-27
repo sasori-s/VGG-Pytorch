@@ -68,7 +68,8 @@ class LocalResponseNormalization:
 
         else:
             raise ValueError("Input tensor must be 1D, 2D, or 3D")
-
+        
+        
         C, W, H = a.size()
 
         squared_a = torch.pow(a, 2)
