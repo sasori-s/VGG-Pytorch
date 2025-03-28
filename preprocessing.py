@@ -5,8 +5,11 @@ from PIL import Image
 import matplotlib.pyplot as plt
 from torchvision import datasets, transforms
 from torchvision.transforms import v2
+from torch.utils.data import DataLoader, Dataset
 import os
+from typing import List, Dict, Tuple
 
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 class Preprocess(datasets.ImageFolder):
     def __init__(
@@ -15,13 +18,15 @@ class Preprocess(datasets.ImageFolder):
             image_size : int,
             single_image : bool = False
     ) -> None: 
-        # super(Preprocess, self).__init__(data_path)
         self.data_path = data_path
         self.image_size = image_size
         self.transformations()
-        self.show_images()
+        # self.show_images()
+        super(Preprocess, self).__init__(data_path, transform=self.transforms)
+        self.dataloader = DataLoader(self, batch_size=32, shuffle=True)
+        print(self.classes)
 
-    
+
     def load_reshaped_image(
             self, image_path : str
     ) -> Image:
@@ -43,10 +48,11 @@ class Preprocess(datasets.ImageFolder):
         plt.imshow(tensor_to_image)
         plt.savefig("tensor_img.png")
         return image
+    
 
     def show_images(self) -> None:
         images = os.listdir(self.data_path)
-        single_image_path = os.path.join(self.data_path, images[4])
+        single_image_path = os.path.join(self.data_path, images[1])
         self.load_reshaped_image(single_image_path)
         print(len(os.listdir(self.data_path)))
 
@@ -61,5 +67,21 @@ class Preprocess(datasets.ImageFolder):
         ])
 
 
+    def calculate_mean_std_for_dataset(self) -> Tuple[List[int], List[int]]:
+        channel_sum = torch.zeros(3)
+        channel_squared_sum = torch.zeros(3)
+        num_pixels = 0
+
+        for images, _ in self.dataloader:
+            images = images.to(device)
+            num_pixels += images.size(0)
+            channel_sum += torch.sum(images, dim=(0, 2, 3))
+            channel_squared_sum += torch.sun(images ** 2, dim=(0, 2, 3))
+        
+        mean = channel_sum / num_pixels
+        std = torch.sqrt(channel_squared_sum / num_pixels - mean ** 2)
+        return mean.tolist(), std.tolist()
+
+
 if __name__ == '__main__':
-    preproces = Preprocess("/teamspace/s3_connections/computer-vision-example/train/Angora", 256)
+    preproces = Preprocess("/teamspace/s3_connections/computer-vision-example/train", 256)

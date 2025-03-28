@@ -4,3 +4,4 @@
 .vscode/
 .wget-hsts
 __pycache__/
+NER/
