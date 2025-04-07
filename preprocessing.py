@@ -24,6 +24,7 @@ class Preprocess(datasets.ImageFolder):
         # self.show_images()
         super(Preprocess, self).__init__(data_path, transform=self.transforms)
         self.dataloader = DataLoader(self, batch_size=32, shuffle=True)
+        self._calculate_mean_std()
         print(self.classes)
 
 
@@ -81,6 +82,28 @@ class Preprocess(datasets.ImageFolder):
         mean = channel_sum / num_pixels
         std = torch.sqrt(channel_squared_sum / num_pixels - mean ** 2)
         return mean.tolist(), std.tolist()
+
+
+    def _calculate_mean_std(self):
+        means = []
+        variances = []
+        images_rgb = [np.array(Image.open(images[0]).getdata()) / 255  for images in self.imgs[:100]]
+
+        for image in images_rgb:
+            if len(image.shape) == 2:
+                means.append(np.mean(image, axis=0))
+
+        mean = np.mean(means, axis=0)
+
+        for image in images_rgb:
+            if len(image.shape) == 2:
+                var = np.mean((image - mean) ** 2, axis=0)
+                variances.append(var)
+        
+        std = np.sqrt(np.mean(variances, axis=0))
+        return mean, std
+
+    
 
 
 if __name__ == '__main__':

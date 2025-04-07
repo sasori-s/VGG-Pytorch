@@ -3,5 +3,6 @@
 .vscode-server/
 .vscode/
 .wget-hsts
+.codeium
 __pycache__/
 NER/
