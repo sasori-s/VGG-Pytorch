@@ -114,7 +114,7 @@ class Preprocess(datasets.ImageFolder):
             return False
 
         images_rgb = np.concatenate(
-            [Image.open(image[0]).getdata() if check(image[0]) else np.zeros((256 * 256, 3)) for image in self.imgs[:100]],
+            [Image.open(image[0]).getdata() if check(image[0]) else np.zeros((256 * 256, 3)) for image in self.imgs[:]],
             axis=0
         ) / 255
 
@@ -122,9 +122,11 @@ class Preprocess(datasets.ImageFolder):
         std = np.std(images_rgb, axis=0)
             
         return mean, std
-
+    
+    def calculate_mean_std_torch(self):
+        pass
     
 
 
 if __name__ == '__main__':
-    preproces = Preprocess("/teamspace/s3_connections/computer-vision-example/train", 256)
+    preproces = Preprocess("/mnt/A4F0E4F6F0E4D01A/Shams Iqbal/VS code/Kaggle/Datasets/animal_dataset/animals/animals", 256)
