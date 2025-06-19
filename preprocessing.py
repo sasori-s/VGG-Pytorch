@@ -8,6 +8,7 @@ from torchvision.transforms import v2
 from torch.utils.data import DataLoader, Dataset
 import os
 from typing import List, Dict, Tuple
+from torchvision.io import read_image
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -24,7 +25,7 @@ class Preprocess(datasets.ImageFolder):
         # self.show_images()
         super(Preprocess, self).__init__(data_path, transform=self.transforms)
         self.dataloader = DataLoader(self, batch_size=32, shuffle=True)
-        self._calculate_mean_std_vectorized()
+        self.calculate_mean_std_torch_vectorized()
         print(self.classes)
 
 
@@ -114,7 +115,7 @@ class Preprocess(datasets.ImageFolder):
             return False
 
         images_rgb = np.concatenate(
-            [Image.open(image[0]).getdata() if check(image[0]) else np.zeros((256 * 256, 3)) for image in self.imgs[:]],
+            [Image.open(image[0]).getdata() if check(image[0]) else np.zeros((256 * 256, 3)) for image in self.imgs[:100]],
             axis=0
         ) / 255
 
@@ -123,8 +124,25 @@ class Preprocess(datasets.ImageFolder):
             
         return mean, std
     
-    def calculate_mean_std_torch(self):
-        pass
+    def calculate_mean_std_torch_vectorized(self):
+        image_tensors = []
+
+        def reshape_and_convert(image_path):
+            image = Image.open(image_path).convert("RGB")
+            image = v2.Resize(size=(self.image_size, self.image_size), antialias=True)(image)
+            image_tensor = torch.tensor(np.array(image)).permute(2, 0, 1)
+            return image_tensor
+
+
+        image_tensors = [
+            reshape_and_convert(image[0]) for image in self.imgs[:]
+        ]
+
+        image_tensors = torch.stack(image_tensors).float() / 255.0
+        image_tensors = image_tensors.to(device)
+        mean = torch.mean(image_tensors, dim=(0, 2, 3)) #tensor([0.5087, 0.5006, 0.4405], device='cuda:0')
+        std = torch.std(image_tensors, dim=(0, 2, 3)) #tensor([0.2832, 0.2682, 0.2887], device='cuda:0')
+        return mean, std
     
 
 
