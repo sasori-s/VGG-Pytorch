@@ -3,14 +3,17 @@ import numpy as np
 from preprocessing import Preprocess
 from torchvision.io import read_image
 from torchvision.transforms import v2
+from torch.utils.data import DataLoader
 from typing import List, Tuple
 from PIL import Image
+from tqdm import tqdm
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 class PreCompute(Preprocess):
     def __init__(self, data_path, image_size):
-        super(PreCompute, self).__init__(data_path, image_size)
+        super(PreCompute, self).__init__(data_path, image_size, purpose='mean_std_calculation')
+        self.dataloader = DataLoader(self, batch_size=64, num_workers=4, device='cuda')
 
 
     def calculate_mean_std_for_dataset(self) -> Tuple[List[int], List[int]]:
@@ -29,46 +32,6 @@ class PreCompute(Preprocess):
         return mean.tolist(), std.tolist()
 
 
-    def _calculate_mean_std(self):
-        means = []
-        variances = []
-        images_rgb = [np.array(Image.open(images[0]).getdata()) / 255  for images in self.imgs[:100]]
-
-        for image in images_rgb:
-            if len(image.shape) == 2:
-                means.append(np.mean(image, axis=0))
-
-        mean = np.mean(means, axis=0)
-
-        for image in images_rgb:
-            if len(image.shape) == 2:
-                var = np.mean((image - mean) ** 2, axis=0)
-                variances.append(var)
-        
-        std = np.sqrt(np.mean(variances, axis=0))
-        return mean, std
-
-    
-    def _calculate_mean_std_vectorized(self):
-        
-        def check(image):
-            image = np.array(Image.open(image).getdata()) / 255
-            if len(image.shape) == 2:
-                return True
-            
-            return False
-
-        images_rgb = np.concatenate(
-            [Image.open(image[0]).getdata() if check(image[0]) else np.zeros((256 * 256, 3)) for image in self.imgs[:100]],
-            axis=0
-        ) / 255
-
-        mean = np.mean(images_rgb, axis=0)
-        std = np.std(images_rgb, axis=0)
-            
-        return mean, std
-    
-    
     def calculate_mean_std_torch_vectorized(self):
         image_tensors = []
 
@@ -90,11 +53,33 @@ class PreCompute(Preprocess):
         return mean, std
     
 
+    
+    def compute_mean_std(self, batch_size=64, num_workers=4, device='cuda'):
+        n_channels = 3
+        mean = torch.zeros(n_channels).to(device)
+        std = torch.zeros(n_channels).to(device)
+        n_pixels = 0
+
+        for images, _ in tqdm(self.dataloader, desc="computing mean/std"):
+            images = images.to(device)
+            b, c, w, h = images.shape
+            n_pixels += b * w * h
+
+            mean += images.sum(dim=[0, 2, 3])
+            std += (images ** 2 ).sum(dim=[0, 2, 3])
+
+        mean /= n_pixels
+        std = torch.sqrt((std / n_pixels) - mean ** 2)
+
+        return mean, std
+    
+    
+
     def __call__(self):
-        mean, std = self.calculate_mean_std_torch_vectorized()
+        mean, std = self.compute_mean_std()
         print(mean, std)
 
     
 if __name__ == '__main__':
-    precompute = PreCompute("/mnt/A4F0E4F6F0E4D01A/Shams Iqbal/VS code/Kaggle/Datasets/animal_dataset/animals/animals", 256)
+    precompute = PreCompute("/mnt/A4F0E4F6F0E4D01A/Shams Iqbal/VS code/Kaggle/Datasets/CIFAR-100-dataset/train", 256)
     precompute()
