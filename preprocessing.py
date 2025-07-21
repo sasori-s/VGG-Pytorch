@@ -10,6 +10,7 @@ import os
 from typing import List, Dict, Tuple
 from torchvision.io import read_image
 
+
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 class Preprocess(datasets.ImageFolder):
@@ -29,7 +30,7 @@ class Preprocess(datasets.ImageFolder):
         
     def decide_transformation(self, purpose):
         if purpose == 'training':
-            super(Preprocess, self).__init__(self.data_path, transform=self.training_transformations)
+            super(Preprocess, self).__init__(self.data_path, transform=self.single_scale_training_transformations)
         elif purpose == 'mean_std_calculation':
             super(Preprocess, self).__init__(self.data_path, transform=self.mean_std_transformations)
 
@@ -40,14 +41,16 @@ class Preprocess(datasets.ImageFolder):
             v2.RandomCrop(size=self.image_size),
             v2.RandomHorizontalFlip(),
             v2.ToDtype(dtype=torch.float32),
-            v2.Normalize(mean=[0.5087, 0.5006, 0.4405], std=[0.2832, 0.2682, 0.2887])
+            v2.Normalize(mean=[0.5071, 0.4865, 0.4409], std=[0.2623, 0.2513, 0.2714])
         ])
 
         self.single_scale_training_transformations = v2.Compose([
+            v2.Resize(size=(self.scale_size, self.scale_size)),
             v2.RandomCrop(size=self.image_size),
             v2.RandomHorizontalFlip(),
             v2.ToDtype(dtype=torch.float32),
-            v2.Normalize(mean=[0.5087, 0.5006, 0.4405], std=[0.2832, 0.2682, 0.2887])
+            v2.ToTensor(),
+            v2.Normalize(mean=[0.5071, 0.4865, 0.4409], std=[0.2623, 0.2513, 0.2714]),
         ])
 
         self.mean_std_transformations = v2.Compose([

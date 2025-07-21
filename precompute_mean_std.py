@@ -13,7 +13,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 class PreCompute(Preprocess):
     def __init__(self, data_path, image_size):
         super(PreCompute, self).__init__(data_path, image_size, purpose='mean_std_calculation')
-        self.dataloader = DataLoader(self, batch_size=64, num_workers=4, device='cuda')
+        self.dataloader = DataLoader(self, batch_size=256, num_workers=4, pin_memory=True)
 
 
     def calculate_mean_std_for_dataset(self) -> Tuple[List[int], List[int]]:
@@ -68,8 +68,8 @@ class PreCompute(Preprocess):
             mean += images.sum(dim=[0, 2, 3])
             std += (images ** 2 ).sum(dim=[0, 2, 3])
 
-        mean /= n_pixels
-        std = torch.sqrt((std / n_pixels) - mean ** 2)
+        mean /= n_pixels #[tensor([0.5071, 0.4865, 0.4409], device='cuda:0')]
+        std = torch.sqrt((std / n_pixels) - mean ** 2) #[tensor([0.2623, 0.2513, 0.2714], device='cuda:0')]
 
         return mean, std
     
