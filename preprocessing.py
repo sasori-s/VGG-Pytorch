@@ -7,6 +7,7 @@ from torchvision import datasets, transforms
 from torchvision.transforms import v2
 from torch.utils.data import DataLoader, Dataset
 import os
+import random
 from typing import List, Dict, Tuple
 from torchvision.io import read_image
 
@@ -33,11 +34,15 @@ class Preprocess(datasets.ImageFolder):
             super(Preprocess, self).__init__(self.data_path, transform=self.single_scale_training_transformations)
         elif purpose == 'mean_std_calculation':
             super(Preprocess, self).__init__(self.data_path, transform=self.mean_std_transformations)
+        elif purpose == 'multiscale_training':
+            super(Preprocess, self).__init__(self.data_path, transform=self.single_scale_training_transformations)
 
 
     def all_transformations(self) -> None:
         self.training_transformations = v2.Compose([
-            v2.ScaleJitter(target_size=(self.scale_size, self.scale_size), scale_range=(0.1, 2.0)),
+            v2.Lambda(
+                lambda image : v2.Resize(random.randint(256, 521))(image)
+            ),
             v2.RandomCrop(size=self.image_size),
             v2.RandomHorizontalFlip(),
             v2.ToDtype(dtype=torch.float32),
@@ -45,7 +50,7 @@ class Preprocess(datasets.ImageFolder):
         ])
 
         self.single_scale_training_transformations = v2.Compose([
-            v2.Resize(size=(self.scale_size, self.scale_size)),
+            v2.Resize(size=self.scale_size),
             v2.RandomCrop(size=self.image_size),
             v2.RandomHorizontalFlip(),
             v2.ToDtype(dtype=torch.float32),
@@ -61,10 +66,12 @@ class Preprocess(datasets.ImageFolder):
 
     def creating_datasets_and_dataloader(self):
         self.dataloader = DataLoader(self, batch_size=128, shuffle=True, num_workers=3, pin_memory=True)
+        # self.multiscale_dataloader = DataLoader(
+        #     self, 
+        #     batch_sampler=Batch
+        # )
         
     
     
-
-
 if __name__ == '__main__':
     preproces = Preprocess("/mnt/A4F0E4F6F0E4D01A/Shams Iqbal/VS code/Kaggle/Datasets/CIFAR-100-dataset/train", 256)

@@ -9,7 +9,7 @@ from torchvision.datasets.folder import make_dataset
 import random
 
 class ShowImage(Preprocess):
-    def __init__(self, data_path, scale_size, purpose='training'):
+    def __init__(self, data_path, scale_size, purpose='multiscale_training'):
         super(ShowImage, self).__init__(data_path, scale_size, purpose)
 
     def find_classes(self, directory):
@@ -29,7 +29,6 @@ class ShowImage(Preprocess):
 
         self.non_transformed_images = [np.array(Image.open(self.imgs[i][0]).resize(size=(224, 224))) for i in random_image_indices]
         print(self.non_transformed_images)
-
 
     
     def show_image(self):
