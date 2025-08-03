@@ -9,8 +9,9 @@ from torch.utils.data import DataLoader, Dataset
 import os
 import random
 from typing import List, Dict, Tuple
-from torchvision.io import read_image
+from torch.utils.data.sampler import BatchSampler
 
+MULTISCLASS = [256, 384, 512]
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -25,6 +26,7 @@ class Preprocess(datasets.ImageFolder):
         self.data_path = data_path
         self.image_size = 224
         self.scale_size = scale_size
+        self.batch_size = 64
         self.all_transformations()
         self.decide_transformation(purpose)
         
@@ -41,11 +43,12 @@ class Preprocess(datasets.ImageFolder):
     def all_transformations(self) -> None:
         self.training_transformations = v2.Compose([
             v2.Lambda(
-                lambda image : v2.Resize(random.randint(256, 521))(image)
+                lambda image : v2.Resize(random.choice(MULTISCLASS))(image)
             ),
             v2.RandomCrop(size=self.image_size),
             v2.RandomHorizontalFlip(),
             v2.ToDtype(dtype=torch.float32),
+            v2.ToTensor(),
             v2.Normalize(mean=[0.5071, 0.4865, 0.4409], std=[0.2623, 0.2513, 0.2714])
         ])
 
@@ -66,10 +69,12 @@ class Preprocess(datasets.ImageFolder):
 
     def creating_datasets_and_dataloader(self):
         self.dataloader = DataLoader(self, batch_size=128, shuffle=True, num_workers=3, pin_memory=True)
-        # self.multiscale_dataloader = DataLoader(
-        #     self, 
-        #     batch_sampler=Batch
-        # )
+        self.multiscale_dataloader = DataLoader(
+            self, 
+            batch_sampler=BatchSampler(batch_size=self.batch_size, drop_last=False),
+            num_workers=8,
+            pin_memory=True
+        )
         
     
     
