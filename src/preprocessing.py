@@ -37,7 +37,7 @@ class Preprocess(datasets.ImageFolder):
         elif purpose == 'mean_std_calculation':
             super(Preprocess, self).__init__(self.data_path, transform=self.mean_std_transformations)
         elif purpose == 'multiscale_training':
-            super(Preprocess, self).__init__(self.data_path, transform=self.single_scale_training_transformations)
+            super(Preprocess, self).__init__(self.data_path, transform=self.training_transformations)
 
 
     def all_transformations(self) -> None:

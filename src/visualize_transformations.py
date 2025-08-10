@@ -50,7 +50,7 @@ class ShowImage(Preprocess):
             ax[1, i].set_title(f"{self.idx_to_class[self.random_images_tensor[i][1]]}")
 
         plt.tight_layout()
-        # plt.show()
+        plt.show()
         plt.savefig('original_vs_transformed.png')
 
         
