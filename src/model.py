@@ -10,7 +10,7 @@ import time
 init(autoreset=True)
 
 class VGG11(nn.Module):
-    def __init__(self, num_classes=90):
+    def __init__(self, input, num_classes=100):
         super(VGG11, self).__init__()
         self.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1)
         self.conv2 = nn.Conv2d(64, 128, kernel_size=3, stride=1, padding=1)
@@ -18,12 +18,18 @@ class VGG11(nn.Module):
         self.conv4 = nn.Conv2d(256, 256, kernel_size=3, stride=1, padding=1)
         self.conv4 = nn.Conv2d(256, 512, kernel_size=3, stride=1, padding=1)
         self.conv5 = nn.Conv2d(512, 512, kernel_size=3, stride=1, padding=1)
-        self.fc1 = nn.Linear(512 * 3 * 3, 4096)
-        self.fc2 = nn.Linear(4096, 4096)
-        self.fc3 = nn.Linear(4096, 100)
+
         self.max_pooling = nn.MaxPool2d(kernel_size=2, stride=2)
         self.dropout = nn.Dropout(0.5)
         self.reLU = nn.ReLU()
+
+        # with torch.no_grad():
+        #     flattened_tensor = self._calculating_in_dim_for_linear_layer(input)
+
+        self.fc1 = nn.Linear(512 * 7 * 7, 4096)
+        self.fc2 = nn.Linear(4096, 4096)
+        self.fc3 = nn.Linear(4096, num_classes)
+
         self.soft_max = nn.Softmax()
 
 
@@ -48,18 +54,34 @@ class VGG11(nn.Module):
         x = self.reLU(x)
         x = self.max_pooling(x)
 
-        x = self.fc1(x)
+        x = self.fc1(x.view(x.size(0), -1))
         x = self.reLU(x)
-        x = self.dropout()
+        x = self.dropout(x)
 
         x = self.fc2(x)
         x = self.reLU(x)
-        x = self.dropout()
+        x = self.dropout(x)
 
         x = self.fc3(x)
         probabilities = self.soft_max(x)
         return x
     
+
+
+    def _calculating_in_dim_for_linear_layer(self, input):
+        conv_layers = nn.Sequential(
+            self.conv1, self.reLU, self.max_pooling,
+            self.conv2, self.reLU, self.max_pooling,
+            self.conv3, self.reLU, self.max_pooling,
+            self.conv4, self.reLU, self.max_pooling,
+            self.conv5, self.reLU, self.max_pooling
+        ).to(device)
+
+        x = conv_layers(input)
+
+        output = x.numel() // x.shape[0]
+        return output
+
 
     def initialize_weight_and_bias(self, m):
         if isinstance(m, nn.Conv2d):
@@ -84,10 +106,10 @@ class VGG11(nn.Module):
 
 if __name__ == '__main__':
     device = torch.device("cuda" if torch.cuda.is_available() else 'cpu')
-    model = VGG11()
-    model.to(device)
     input = torch.randn(32, 3, 224, 224).to(device)
-    oouput = model(input)
+    model = VGG11(input)
+    model.to(device)
+    ouptut = model(input)
     print(summary(model, (3, 224, 224)))
     
     
