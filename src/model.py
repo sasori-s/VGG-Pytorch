@@ -23,10 +23,10 @@ class VGG11(nn.Module):
         self.dropout = nn.Dropout(0.5)
         self.reLU = nn.ReLU()
 
-        # with torch.no_grad():
-        #     flattened_tensor = self._calculating_in_dim_for_linear_layer(input)
+        with torch.no_grad():
+            flattened_tensor = self._calculating_in_dim_for_linear_layer(input)
 
-        self.fc1 = nn.Linear(512 * 7 * 7, 4096)
+        self.fc1 = nn.Linear(flattened_tensor, 4096)
         self.fc2 = nn.Linear(4096, 4096)
         self.fc3 = nn.Linear(4096, num_classes)
 
