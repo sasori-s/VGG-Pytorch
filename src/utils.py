@@ -1,6 +1,7 @@
 # All creadit goes to https://github.com/Lornatang/VGG-PyTorch/blob/main/utils.py
 
 import torch
+from enum import Enum
 
 
 DEVICE = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
@@ -57,5 +58,52 @@ def load_resume_state_dict(model,
     scheduler.load_state_dict(checkpoint['scheduler'])
 
     return model, new_model, start_epoch, best_acc, optimizer, scheduler
+
+
+class Summary():
+    NONE = 1
+    AVERAGE = 2
+    SUM = 2
+    COUNT = 3
+
+
+class AverageMeter:
+    def __init__(self, name, fmt=":f", summary_type=Summary.AVERAGE):
+        self.name = name
+        self.fmt = fmt
+        self.summary_type = summary_type
+        self.reset()
+
+    
+    def reset(self):
+        self.val = 0
+        self.average = 0
+        self.sum = 0
+        self.count = 0
+
+
+    def update(self, val, n=0):
+        self.val = val
+        self.sum = val * n
+        self.count += n
+        self.avg = self.sum / self.count
+
+
+    def __str__(self):
+        fmtstr = "{name} {val" + self.fmt + "} ({avg" + self.fmt + "})"
+        return fmtstr.format(**self.__dict__)
+    
+
+    def summary(self):
+        if self.summary_type == Summary.NONE:
+            fmtstr = ""
+        elif self.summary_type == Summary.AVERAGE:
+            fmtstr = "{name} {avg: .2f}"
+        elif self.summary_type == Summary.COUNT:
+            fmtstr = "{name} {count: .2f}"
+        else:
+            raise ValueError(f"Invalid summary type {self.summary_type}")
+        
+        return fmtstr.format(**self.__dict__)
 
 
