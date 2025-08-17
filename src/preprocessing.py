@@ -27,16 +27,15 @@ class Preprocess(datasets.ImageFolder):
         self.image_size = 224
         self.scale_size = scale_size
         self.batch_size = 64
-        self.all_transformations()
-        self.decide_transformation(purpose)
+        self.purpose = purpose
         
         
-    def decide_transformation(self, purpose):
-        if purpose == 'training':
+    def decide_transformation(self):
+        if self.purpose == 'training':
             super(Preprocess, self).__init__(self.data_path, transform=self.single_scale_training_transformations)
-        elif purpose == 'mean_std_calculation':
+        elif self.purpose == 'mean_std_calculation':
             super(Preprocess, self).__init__(self.data_path, transform=self.mean_std_transformations)
-        elif purpose == 'multiscale_training':
+        elif self.purpose == 'multiscale_training':
             super(Preprocess, self).__init__(self.data_path, transform=self.training_transformations)
 
 
@@ -76,6 +75,11 @@ class Preprocess(datasets.ImageFolder):
             pin_memory=True
         )
         
+    
+    def __call__(self):
+        self.all_transformations()
+        self.decide_transformation(self.purpose)
+        return self.dataloader
     
     
 if __name__ == '__main__':
