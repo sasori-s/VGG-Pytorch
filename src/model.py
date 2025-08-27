@@ -9,6 +9,8 @@ import time
 
 init(autoreset=True)
 
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else 'cpu')
+
 class VGG11(nn.Module):
     def __init__(self, input, num_classes=100):
         super(VGG11, self).__init__()
@@ -23,10 +25,11 @@ class VGG11(nn.Module):
         self.dropout = nn.Dropout(0.5)
         self.reLU = nn.ReLU()
 
+        # No grad else it will be added to backward graph.
         with torch.no_grad():
             flattened_tensor = self._calculating_in_dim_for_linear_layer(input)
 
-        self.fc1 = nn.Linear(flattened_tensor, 4096)
+        self.fc1 = nn.Linear(flattened_tensor, 4096) #nn.Linear(512 * 7 * 7) which is nn.Linear(last_cnn's channel size, kernel[0], kernel[1], fc1's output size).
         self.fc2 = nn.Linear(4096, 4096)
         self.fc3 = nn.Linear(4096, num_classes)
 
@@ -67,7 +70,7 @@ class VGG11(nn.Module):
         return x
     
 
-
+    #This funciton is for dynamic way for transitioning CNN to FC
     def _calculating_in_dim_for_linear_layer(self, input):
         conv_layers = nn.Sequential(
             self.conv1, self.reLU, self.max_pooling,
@@ -75,7 +78,7 @@ class VGG11(nn.Module):
             self.conv3, self.reLU, self.max_pooling,
             self.conv4, self.reLU, self.max_pooling,
             self.conv5, self.reLU, self.max_pooling
-        ).to(device)
+        ).to(DEVICE)
 
         x = conv_layers(input)
 
@@ -105,10 +108,10 @@ class VGG11(nn.Module):
 
 
 if __name__ == '__main__':
-    device = torch.device("cuda" if torch.cuda.is_available() else 'cpu')
-    input = torch.randn(32, 3, 224, 224).to(device)
+    input = torch.randn(32, 3, 224, 224).to(DEVICE)
     model = VGG11(input)
-    model.to(device)
+    print(next(model.parameters()).device)
+    model.to(DEVICE)
     ouptut = model(input)
     print(summary(model, (3, 224, 224)))
     

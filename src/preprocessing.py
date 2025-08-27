@@ -20,7 +20,7 @@ class Preprocess(datasets.ImageFolder):
             self, 
             data_path : str, 
             scale_size : int = 256,
-            purpose = 'training'
+            purpose = 'single_scale_training'
     ) -> None: 
         
         self.data_path = data_path
@@ -31,7 +31,7 @@ class Preprocess(datasets.ImageFolder):
         
         
     def decide_transformation(self):
-        if self.purpose == 'training':
+        if self.purpose == 'single_scale_training':
             super(Preprocess, self).__init__(self.data_path, transform=self.single_scale_training_transformations)
         elif self.purpose == 'mean_std_calculation':
             super(Preprocess, self).__init__(self.data_path, transform=self.mean_std_transformations)
@@ -67,18 +67,21 @@ class Preprocess(datasets.ImageFolder):
 
 
     def creating_datasets_and_dataloader(self):
-        self.dataloader = DataLoader(self, batch_size=128, shuffle=True, num_workers=3, pin_memory=True)
-        self.multiscale_dataloader = DataLoader(
-            self, 
-            batch_sampler=BatchSampler(batch_size=self.batch_size, drop_last=False),
-            num_workers=8,
-            pin_memory=True
-        )
+        if self.purpose == 'single_scale_training':
+            self.dataloader = DataLoader(self, batch_size=128, shuffle=True, num_workers=3, pin_memory=True)
+        else:
+            self.dataloader = DataLoader(
+                self, 
+                batch_sampler=BatchSampler(batch_size=self.batch_size, drop_last=False),
+                num_workers=8,
+                pin_memory=True
+            )
         
     
     def __call__(self):
         self.all_transformations()
-        self.decide_transformation(self.purpose)
+        self.decide_transformation()
+        self.creating_datasets_and_dataloader()
         return self.dataloader
     
     
