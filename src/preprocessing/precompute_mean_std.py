@@ -106,8 +106,28 @@ class PreCompute(ImageFolder):
         mean /= n_pixels #[tensor([0.5071, 0.4865, 0.4409], device='cuda:0')]
         std = torch.sqrt((std / n_pixels) - mean ** 2) #[tensor([0.2623, 0.2513, 0.2714], device='cuda:0')]
 
+        self.save_mean_std(mean, std)    
         return mean, std
     
+    
+    def save_mean_std(self, mean, std):
+        """
+        I did save the mean and std of the dataset so that 
+        I do not need to recompute again and again
+        """
+        tensor_path = 'output/tensors'
+        os.makedirs(tensor_path, exist_ok=True)
+        
+        if self.debug is True:    
+            torch.save(
+                os.path.join(tensor_path, 'dataset_mean'),
+                mean
+            )
+            
+            torch.save(
+                os.path.join(tensor_path, 'dataset_std'),
+                std
+            )
     
 
     def __call__(self):

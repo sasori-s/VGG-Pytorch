@@ -19,15 +19,31 @@ DEVICE = settings.DEVICE
 
 settings.DEBUG = True if DATASET_PATH == settings.DATASET_PATH1 else False
 
-def initiate_training_parameters():
+
+def compute_mean_std_of_dataset():
     logger.warning(f"Debug mode --- {settings.DEBUG}")
     logger.info(f"Computing mean and standarnd deviation for the dataset")
-    precompute_mean_std = PreCompute(
-        data_path=os.path.join(DATASET_PATH, 'train'),
-        debug=settings.DEBUG
-    )
     
-    mean, std = precompute_mean_std()
+    if settings.DEBUG is False:
+        if os.path.exists(settings.DATASET_MEAN_PATH) and os.path.exists(settings.DATASET_STD_PATH):
+            mean = torch.load(settings.DATASET_MEAN_PATH)
+            std = torch.load(settings.DATASET_STD_PATH)
+        else:
+            precompute_mean_std = PreCompute(
+                data_path=os.path.join(DATASET_PATH, 'train'),
+                debug=settings.DEBUG
+            )
+            
+            mean, std = precompute_mean_std()
+    else:
+        mean = settings.DATASET_MEAN
+        std = settings.DATASET_STD
+        
+    return mean, std
+
+
+def initiate_training_parameters():
+    mean, std = compute_mean_std_of_dataset()
     
     train_preprocessor = Preprocess(
         os.path.join(DATASET_PATH, 'train'), 
