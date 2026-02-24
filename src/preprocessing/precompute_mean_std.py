@@ -130,7 +130,9 @@ class PreCompute(ImageFolder):
                 os.path.join(tensor_path, 'dataset_std'),
                 std
             )
-    
+
+        logger.info(f"Mean and STD of the dataset has been saved to {tensor_path}")
+        
 
     def __call__(self):
         mean, std = self.compute_mean_std()

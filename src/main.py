@@ -26,9 +26,11 @@ def compute_mean_std_of_dataset():
     
     if settings.DEBUG is False:
         if os.path.exists(settings.DATASET_MEAN_PATH) and os.path.exists(settings.DATASET_STD_PATH):
+            logger.info(f"The Mean and STD tensors for this dataset already exists, loading")
             mean = torch.load(settings.DATASET_MEAN_PATH)
             std = torch.load(settings.DATASET_STD_PATH)
         else:
+            logger.info(f"The MEAN and STD of this dataset has not been calculated, calculating....")
             precompute_mean_std = PreCompute(
                 data_path=os.path.join(DATASET_PATH, 'train'),
                 debug=settings.DEBUG
