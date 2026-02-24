@@ -48,14 +48,14 @@ class PreCompute(ImageFolder):
         return transform
 
     def build_dataloader(self):
-        self.dataloader = DataLoader(dataset=self, batch_size=self.batch_size, shuffle=True, num_workers=3)
+        self.dataloader = DataLoader(dataset=self, batch_size=self.batch_size, shuffle=True, num_workers=3, pin_memory=True)
         
 
     def calculate_mean_std_for_dataset(self) -> Tuple[List[int], List[int]]:
         channel_sum = torch.zeros(3)
         channel_squared_sum = torch.zeros(3)
         num_pixels = 0
-
+        
         for images, _ in self.dataloader:
             images = images.to(device)
             num_pixels += images.size(0)
@@ -94,6 +94,8 @@ class PreCompute(ImageFolder):
         mean = torch.zeros(n_channels).to(device)
         std = torch.zeros(n_channels).to(device)
         n_pixels = 0
+
+        logger.info(f"{device} is utilized to calculate mean and std")
 
         for images, _ in tqdm(self.dataloader, desc="computing mean/std"):
             images = images.to(device)
