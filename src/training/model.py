@@ -1,4 +1,4 @@
-from local_response_normalization import LocalResponseNormalization
+from preprocessing.local_response_normalization import LocalResponseNormalization
 import torch.nn as nn
 import torch.nn.functional as F
 import torch

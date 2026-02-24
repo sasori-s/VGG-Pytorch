@@ -1,5 +1,5 @@
 import torch
-from utils import accuracy
+from utils.utils import accuracy
 
 class AccuracyTester:
     def __init__(self):

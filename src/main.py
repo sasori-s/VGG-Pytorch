@@ -1,17 +1,41 @@
-from model import VGG11
-from train import Training
-from preprocessing import Preprocess
-from precompute_mean_std import PreCompute
+from training.model import VGG11
+from training.train import Training
+from preprocessing.preprocessing import Preprocess
+from preprocessing.precompute_mean_std import PreCompute
 import torch.nn as nn
 import torch
+import os
 from torch.optim.lr_scheduler import LRScheduler, StepLR
+from dotenv import load_dotenv
+from core.settings import Settings
+from core.logger import logger
 
-DATASET_PATH = "/mnt/A4F0E4F6F0E4D01A/Shams Iqbal/VS code/Kaggle/Datasets/CIFAR-100-dataset/"
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else 'cpu')
+load_dotenv()
+
+settings = Settings()
+
+DATASET_PATH = settings.DATASET_PATH1 if os.path.exists(settings.DATASET_PATH1) else settings.DATASET_PATH2
+DEVICE = settings.DEVICE
+
+settings.DEBUG = True if DATASET_PATH == settings.DATASET_PATH1 else False
 
 def initiate_training_parameters():
-    train_preprocessor = Preprocess(DATASET_PATH + "train (Copy)", scale_size=256, purpose='single_scale_training')
-    val_preprocessor = Preprocess(DATASET_PATH + 'val')
+    logger.warning(f"Debug mode --- {settings.DEBUG}")
+    logger.info(f"Computing mean and standarnd deviation for the dataset")
+    precompute_mean_std = PreCompute(
+        data_path=os.path.join(DATASET_PATH, 'train'),
+        debug=settings.DEBUG
+    )
+    
+    mean, std = precompute_mean_std()
+    
+    train_preprocessor = Preprocess(
+        os.path.join(DATASET_PATH, 'train'), 
+        scale_size=256, 
+        purpose='single_scale_training'
+    )
+    
+    val_preprocessor = Preprocess(os.path.join(DATASET_PATH, 'val'))
 
     train_dataloader = train_preprocessor()
     val_dataloader = val_preprocessor()

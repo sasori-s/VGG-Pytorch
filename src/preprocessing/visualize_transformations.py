@@ -1,4 +1,4 @@
-from preprocessing import Preprocess
+from preprocessing.preprocessing import Preprocess
 import matplotlib.pyplot as plt
 from PIL import Image
 import numpy as np

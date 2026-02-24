@@ -47,7 +47,7 @@ class Preprocess(datasets.ImageFolder):
             v2.RandomCrop(size=self.image_size),
             v2.RandomHorizontalFlip(),
             v2.ToDtype(dtype=torch.float32),
-            v2.ToTensor(),
+            v2.ToTensor(), # I believe this is redundant, as it converts PIL image and ndarray to Tensor
             v2.Normalize(mean=[0.5071, 0.4865, 0.4409], std=[0.2623, 0.2513, 0.2714])
         ])
 

@@ -1,20 +1,55 @@
 import torch
+import os
 import numpy as np
-from preprocessing import Preprocess
-from torchvision.io import read_image
+from preprocessing.preprocessing import Preprocess
+from torchvision.datasets import ImageFolder
 from torchvision.transforms import v2
 from torch.utils.data import DataLoader
 from typing import List, Tuple
 from PIL import Image
 from tqdm import tqdm
+from core.settings import Settings
+from core.logger import logger
+settings = Settings()
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+device = settings.DEVICE
 
-class PreCompute(Preprocess):
-    def __init__(self, data_path, image_size):
-        super(PreCompute, self).__init__(data_path, image_size, purpose='mean_std_calculation')
-        self.dataloader = DataLoader(self, batch_size=256, num_workers=4, pin_memory=True)
+class PreCompute(ImageFolder):
+    def __init__(self, data_path, debug, image_size=settings.IMAGE_SIZE, batch_size=settings.BATCH_SIZE,):
+        self.batch_size = batch_size
+        self.data_path = data_path
+        self.image_size = image_size
+        self.debug = debug
+        super(PreCompute, self).__init__(root=data_path, transform=self.get_transforms())
+        self.build_dataloader()
+        
+    
+    def find_classes(self, directory):
+        if self.debug == False:
+            return super().find_classes(directory)
+            
+        classes = sorted(entry.name for entry in os.scandir(directory) if entry.is_dir()) 
+        classes = classes[:len(classes * 1) // 6]
+        
+        if not classes:
+            raise FileNotFoundError(f"Couldn't find any class folder in {directory}.")
+        
+        class_to_idx = {cls : i for i, cls in enumerate(classes)}
+        return classes, class_to_idx
+    
+    
+    def get_transforms(self):
+        transform = v2.Compose([
+            v2.Resize(size=(self.image_size, self.image_size)),
+            v2.ToImage(),
+            v2.ToDtype(dtype=torch.float32, scale=True)
+        ])
+        
+        return transform
 
+    def build_dataloader(self):
+        self.dataloader = DataLoader(dataset=self, batch_size=self.batch_size, shuffle=True, num_workers=3)
+        
 
     def calculate_mean_std_for_dataset(self) -> Tuple[List[int], List[int]]:
         channel_sum = torch.zeros(3)
@@ -54,7 +89,7 @@ class PreCompute(Preprocess):
     
 
     
-    def compute_mean_std(self, batch_size=64, num_workers=4, device='cuda'):
+    def compute_mean_std(self, batch_size=64, num_workers=4, device=settings.DEVICE):
         n_channels = 3
         mean = torch.zeros(n_channels).to(device)
         std = torch.zeros(n_channels).to(device)
@@ -77,7 +112,8 @@ class PreCompute(Preprocess):
 
     def __call__(self):
         mean, std = self.compute_mean_std()
-        print(mean, std)
+        logger.info(f"The mean and std for dataset is mean : {mean}, std : {std}")
+        return mean, std
 
     
 if __name__ == '__main__':

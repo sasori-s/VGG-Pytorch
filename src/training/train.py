@@ -1,8 +1,8 @@
 import torch
-from preprocessing import Preprocess
+from preprocessing.preprocessing import Preprocess
 import torch.optim as optim
 import torch.nn as nn
-from model import VGG11
+from training.model import VGG11
 from torch.nn import CrossEntropyLoss
 from torch.optim.lr_scheduler import LRScheduler
 
