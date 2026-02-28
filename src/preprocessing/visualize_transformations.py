@@ -7,10 +7,23 @@ import os
 from pathlib import Path
 from torchvision.datasets.folder import make_dataset
 import random
+from core.settings import Settings
+
+settings = Settings()
 
 class ShowImage(Preprocess):
-    def __init__(self, data_path, scale_size, purpose='multiscale_training'):
-        super(ShowImage, self).__init__(data_path, scale_size, purpose)
+    """
+    This class will be obsolete. 
+    The functionality of this class has been moved to its super
+    """
+    def __init__(self, data_path, scale_size, purpose='single_scale_training'):
+        super(ShowImage, self).__init__(
+            dataset_mean=settings.DATASET_MEAN,
+            dataset_std=settings.DATASET_STD,
+            data_path=data_path, 
+            scale_size=scale_size, 
+            purpose=purpose
+        )
 
     def find_classes(self, directory):
         k = 10
@@ -60,6 +73,6 @@ class ShowImage(Preprocess):
         self.show_image()
 
 if __name__ == '__main__':
-    data_path = "/mnt/A4F0E4F6F0E4D01A/Shams Iqbal/VS code/Kaggle/Datasets/CIFAR-100-dataset/train"
+    data_path = os.path.join(settings.DATASET_PATH1, 'train')
     graph = ShowImage(data_path, 256)
     graph()

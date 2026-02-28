@@ -9,6 +9,7 @@ from torch.optim.lr_scheduler import LRScheduler, StepLR
 from dotenv import load_dotenv
 from core.settings import Settings
 from core.logger import logger
+from preprocessing.visualize_transformations import ShowImage
 
 load_dotenv()
 
