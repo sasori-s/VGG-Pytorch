@@ -48,12 +48,22 @@ def initiate_training_parameters():
     mean, std = compute_mean_std_of_dataset()
     
     train_preprocessor = Preprocess(
-        os.path.join(DATASET_PATH, 'train'), 
+        dataset_mean=mean,
+        dataset_std=std,
+        data_path=os.path.join(DATASET_PATH, 'train'), 
         scale_size=256, 
-        purpose='single_scale_training'
+        purpose='single_scale_training',
+        debug=settings.DEBUG
     )
     
-    val_preprocessor = Preprocess(os.path.join(DATASET_PATH, 'val'))
+    val_preprocessor = Preprocess(
+        dataset_mean=mean,
+        dataset_std=std,
+        data_path=os.path.join(DATASET_PATH, 'val'),
+        scale_size=256,
+        purpose='single_scale_training',
+        debug=settings.DEBUG
+    )
 
     train_dataloader = train_preprocessor()
     val_dataloader = val_preprocessor()
@@ -70,7 +80,7 @@ def initiate_training_parameters():
     model_kwgs = {
         "model" : model,
         "train_dataloader": train_dataloader,
-        "val_dataloader": val_preprocessor,
+        "val_dataloader": val_dataloader,
         "epochs" : epochs,
         "criterion" : criterion,
         "optimizer" : optimizer_sgd,

@@ -27,7 +27,7 @@ logger.setLevel(logging.INFO)
 # Formatter
 # =========================
 formatter = logging.Formatter(
-    '[RUN_ID=%(run_id)s] '
+    '[%(run_id)s] '
     '%(levelname)s '
     '%(filename)s:%(lineno)d - %(funcName)s - %(message)s'
 )

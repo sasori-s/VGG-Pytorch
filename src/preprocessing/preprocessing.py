@@ -10,25 +10,43 @@ import os
 import random
 from typing import List, Dict, Tuple
 from torch.utils.data.sampler import BatchSampler
+from core.settings import Settings
 
-MULTISCLASS = [256, 384, 512]
-
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+settings = Settings()
 
 class Preprocess(datasets.ImageFolder):
     def __init__(
             self, 
+            dataset_mean : torch.tensor,
+            dataset_std : torch.tensor,
             data_path : str, 
             scale_size : int = 256,
-            purpose = 'single_scale_training'
+            purpose = 'single_scale_training',
+            debug = True
     ) -> None: 
-        
+        self.dataset_mean = dataset_mean
+        self.dataset_std = dataset_std
         self.data_path = data_path
-        self.image_size = 224
+        self.image_size = settings.IMAGE_SIZE
         self.scale_size = scale_size
-        self.batch_size = 64
+        self.batch_size = settings.BATCH_SIZE
         self.purpose = purpose
+        self.debug = debug
         
+    
+    def find_classes(self, directory):
+        if self.debug == False:
+            return super().find_classes(directory)
+            
+        classes = sorted(entry.name for entry in os.scandir(directory) if entry.is_dir()) 
+        classes = classes[:len(classes * 1) // 6]
+        
+        if not classes:
+            raise FileNotFoundError(f"Couldn't find any class folder in {directory}.")
+        
+        class_to_idx = {cls : i for i, cls in enumerate(classes)}
+        return classes, class_to_idx
+    
         
     def decide_transformation(self):
         if self.purpose == 'single_scale_training':
@@ -42,22 +60,23 @@ class Preprocess(datasets.ImageFolder):
     def all_transformations(self) -> None:
         self.training_transformations = v2.Compose([
             v2.Lambda(
-                lambda image : v2.Resize(random.choice(MULTISCLASS))(image)
+                lambda image : v2.Resize(random.choice(settings.MULTISCLASS))(image)
             ),
             v2.RandomCrop(size=self.image_size),
             v2.RandomHorizontalFlip(),
+            # v2.ToTensor(),# I believe this is redundant, as it converts PIL image and ndarray to Tensor 
+            v2.ToImage(), 
             v2.ToDtype(dtype=torch.float32),
-            v2.ToTensor(), # I believe this is redundant, as it converts PIL image and ndarray to Tensor
-            v2.Normalize(mean=[0.5071, 0.4865, 0.4409], std=[0.2623, 0.2513, 0.2714])
+            v2.Normalize(mean=self.dataset_mean, std=self.dataset_std)
         ])
 
         self.single_scale_training_transformations = v2.Compose([
             v2.Resize(size=self.scale_size),
             v2.RandomCrop(size=self.image_size),
             v2.RandomHorizontalFlip(),
+            v2.ToImage(),
             v2.ToDtype(dtype=torch.float32),
-            v2.ToTensor(),
-            v2.Normalize(mean=[0.5071, 0.4865, 0.4409], std=[0.2623, 0.2513, 0.2714]),
+            v2.Normalize(mean=self.dataset_mean, std=self.dataset_std),
         ])
 
         self.mean_std_transformations = v2.Compose([
@@ -68,7 +87,7 @@ class Preprocess(datasets.ImageFolder):
 
     def creating_datasets_and_dataloader(self):
         if self.purpose == 'single_scale_training':
-            self.dataloader = DataLoader(self, batch_size=128, shuffle=True, num_workers=3, pin_memory=True)
+            self.dataloader = DataLoader(self, batch_size=self.batch_size, shuffle=True, num_workers=3, pin_memory=True)
         else:
             self.dataloader = DataLoader(
                 self, 

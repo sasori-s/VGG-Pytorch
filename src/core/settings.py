@@ -18,4 +18,6 @@ class Settings(BaseSettings):
     DATASET_MEAN : torch.tensor = torch.tensor([0.4531, 0.4512, 0.3915])
     DATASET_STD : torch.tensor = torch.tensor([0.2573, 0.2421, 0.2585])
     
+    MULTISCLASS : list[int] = [256, 384, 512]
+    
     model_config = SettingsConfigDict(env_file='.env', extra='allow')
