@@ -66,7 +66,7 @@ class Preprocess(datasets.ImageFolder):
             v2.RandomHorizontalFlip(),
             # v2.ToTensor(),# I believe this is redundant, as it converts PIL image and ndarray to Tensor 
             v2.ToImage(), 
-            v2.ToDtype(dtype=torch.float32),
+            v2.ToDtype(dtype=torch.float32, scale=True),
             v2.Normalize(mean=self.dataset_mean, std=self.dataset_std)
         ])
 
@@ -75,7 +75,7 @@ class Preprocess(datasets.ImageFolder):
             v2.RandomCrop(size=self.image_size),
             v2.RandomHorizontalFlip(),
             v2.ToImage(),
-            v2.ToDtype(dtype=torch.float32),
+            v2.ToDtype(dtype=torch.float32, scale=True),
             v2.Normalize(mean=self.dataset_mean, std=self.dataset_std),
         ])
 
@@ -125,7 +125,7 @@ class Preprocess(datasets.ImageFolder):
             ax[1, i].set_title(f"{self.idx_to_class[self.random_images_tensor[i][1]]}")
 
         plt.tight_layout()
-        plt.imshow()
+        plt.show()
         plt.savefig('original_vs_transformed.png')
     
     
