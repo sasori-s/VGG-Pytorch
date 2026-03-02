@@ -23,7 +23,8 @@ class Preprocess(datasets.ImageFolder):
             data_path : str, 
             scale_size : int = 256,
             purpose = 'single_scale_training',
-            debug = True
+            debug = True,
+            task='train'
     ) -> None: 
         self.dataset_mean = dataset_mean
         self.dataset_std = dataset_std
@@ -33,6 +34,7 @@ class Preprocess(datasets.ImageFolder):
         self.batch_size = settings.BATCH_SIZE
         self.purpose = purpose
         self.debug = debug
+        self.task = task
         
     
     def find_classes(self, directory):
@@ -140,7 +142,8 @@ class Preprocess(datasets.ImageFolder):
         
         # if self.debug:
         self.take_random_samples()
-        self.show_image()
+        if self.task == 'train':
+            self.show_image()
         
         return self.dataloader
     

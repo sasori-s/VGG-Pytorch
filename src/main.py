@@ -63,7 +63,8 @@ def initiate_training_parameters():
         data_path=os.path.join(DATASET_PATH, 'val'),
         scale_size=256,
         purpose='single_scale_training',
-        debug=settings.DEBUG
+        debug=settings.DEBUG,
+        task='validation'
     )
 
     train_dataloader = train_preprocessor()
