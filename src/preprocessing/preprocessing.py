@@ -1,4 +1,5 @@
 import torch
+import torchvision
 import torch.nn as nn
 import numpy as np
 from PIL import Image
@@ -124,6 +125,9 @@ class Preprocess(datasets.ImageFolder):
             ax[1, i].axis("off")
             ax[1, i].set_title(f"{self.idx_to_class[self.random_images_tensor[i][1]]}")
 
+        sample_image = self.random_images_tensor[0][0].permute(1, 2, 0)
+        sample_image = (sample_image - sample_image.min()) / (sample_image.max() - sample_image.min())
+        plt.imsave('sample_transformations.png', sample_image)
         plt.tight_layout()
         plt.show()
         plt.savefig('original_vs_transformed.png')
