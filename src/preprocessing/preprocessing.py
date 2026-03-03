@@ -12,7 +12,7 @@ import random
 from typing import List, Dict, Tuple
 from torch.utils.data.sampler import BatchSampler
 from core.settings import Settings
-from core import logger
+from core.logger import logger
 
 settings = Settings()
 
