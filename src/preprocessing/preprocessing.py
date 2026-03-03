@@ -108,6 +108,7 @@ class Preprocess(datasets.ImageFolder):
 
         self.non_transformed_images = [np.array(Image.open(self.imgs[i][0]).resize(size=(224, 224))) for i in random_image_indices]
         # print(self.non_transformed_images)
+        print()
 
     
     def show_image(self):
@@ -128,16 +129,18 @@ class Preprocess(datasets.ImageFolder):
             ax[1, i].axis("off")
             ax[1, i].set_title(f"{self.idx_to_class[self.random_images_tensor[i][1]]}")
 
-        if not self.debug:
-            logger.info(f"Plotting the Sample Transformed Image")
-            plt.show()    
-            
+        plt.tight_layout()
+        fig.savefig('original_vs_transformed.png', bbox_inches='tight')
+        
         sample_image = self.random_images_tensor[0][0].permute(1, 2, 0)
         sample_image = (sample_image - sample_image.min()) / (sample_image.max() - sample_image.min())
         plt.imsave('sample_transformations.png', sample_image.numpy())
-        plt.tight_layout()
-        plt.show()
-        plt.savefig('original_vs_transformed.png')
+        
+        if not self.debug:
+            logger.info(f"Original vs Transformed Image")
+            plt.show()    
+        
+        plt.close(fig)
     
     
     def __call__(self):
