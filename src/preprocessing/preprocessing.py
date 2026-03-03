@@ -12,6 +12,7 @@ import random
 from typing import List, Dict, Tuple
 from torch.utils.data.sampler import BatchSampler
 from core.settings import Settings
+from core import logger
 
 settings = Settings()
 
@@ -127,6 +128,10 @@ class Preprocess(datasets.ImageFolder):
             ax[1, i].axis("off")
             ax[1, i].set_title(f"{self.idx_to_class[self.random_images_tensor[i][1]]}")
 
+        if not self.debug:
+            logger.info(f"Plotting the Sample Transformed Image")
+            plt.show()    
+            
         sample_image = self.random_images_tensor[0][0].permute(1, 2, 0)
         sample_image = (sample_image - sample_image.min()) / (sample_image.max() - sample_image.min())
         plt.imsave('sample_transformations.png', sample_image.numpy())
