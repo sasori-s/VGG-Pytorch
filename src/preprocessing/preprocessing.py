@@ -129,7 +129,7 @@ class Preprocess(datasets.ImageFolder):
 
         sample_image = self.random_images_tensor[0][0].permute(1, 2, 0)
         sample_image = (sample_image - sample_image.min()) / (sample_image.max() - sample_image.min())
-        plt.imsave('sample_transformations.png', sample_image)
+        plt.imsave('sample_transformations.png', sample_image.numpy())
         plt.tight_layout()
         plt.show()
         plt.savefig('original_vs_transformed.png')
